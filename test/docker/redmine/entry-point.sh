@@ -4,14 +4,7 @@ set -e
 
 cd /usr/src/redmine
 
-echo "
-test:
-  adapter: sqlite3
-  encoding: utf8
-  database: /usr/src/redmine/test.db
-" > config/database.yml
-
-cp Gemfile.lock.sqlite3 Gemfile.lock
+setup-db
 
 echo "=== Installing dependencies"
 bundle install --with test > /dev/null

@@ -1,20 +1,39 @@
 language: ruby
 
-services:
-  - docker
+cache: bundler
 
 env:
-  - REDMINE=3.3
-  - REDMINE=3.4
-  - REDMINE=4.0
+  - REDMINE_VER=3.3.1
+#  - REDMINE_VER=3.4.1
+#  - REDMINE_VER=4.0.1
 
 matrix:
   fast_finish: true
 
 before_install:
+  - export PLUGIN_NAME=redmine_git_mirror
+  - export REDMINE_PATH=$HOME/redmine
+  - export BUNDLE_GEMFILE=$REDMINE_PATH/Gemfile
+
   - cd test
-  - docker-compose pull
-  - docker-compose build
+  - docker-compose up -d selenium_chrome
+  - export SELENIUM_HUB_URL=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' rgm_tests_selenium_1`
+  - echo "Host ip" `hostname -i`
+  - echo "Container ip $SELENIUM_HUB_URL"
+
+  - svn -q co http://svn.redmine.org/redmine/tags/$REDMINE_VER $REDMINE_PATH
+  - ln -s $TRAVIS_BUILD_DIR $REDMINE_PATH/plugins/$PLUGIN_NAME
+
+  - cd $REDMINE_PATH
+  - $TRAVIS_BUILD_DIR/test/docker/redmine/setup-db.sh
+
+install: bundle install --jobs=3 --retry=3 --with development test --without rmagick
+
+before_script:
+  - bundle exec rake db:create
+  - bundle exec rake db:migrate
+  - bundle exec rake redmine:plugins:migrate
 
 script:
-  - ./start.sh
+  - bundle exec ruby plugins/redmine_git_mirror/test/all.rb
+

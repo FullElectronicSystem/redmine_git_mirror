@@ -9,6 +9,7 @@ RUN apt-get update -y && apt-get install -y build-essential
 RUN cd /usr/src/redmine && bundle install --with test
 
 COPY entry-point.sh /
+COPY setup-db.sh /usr/local/bin/setup-db
 COPY run-tests.sh /usr/local/bin/tests-run
 
 ENTRYPOINT ["/entry-point.sh"]
