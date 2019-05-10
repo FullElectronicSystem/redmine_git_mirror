@@ -122,8 +122,11 @@ class Repository::GitMirror < Repository::Git
   end
 
   def fetch_changesets(fetch = false)
-    return unless fetch
-    super()
+    if(fetch)
+      super()
+    else
+      self.fetch()
+    end
   end
 
   def fetch
